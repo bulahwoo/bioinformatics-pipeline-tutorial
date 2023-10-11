@@ -1,0 +1,27 @@
+# Dummy targets
+all: data/results.tgz
+
+clean:
+	rm -rf data/*
+
+.PHONY: all clean
+
+# Analysis and plotting
+data/KLF4.peptides.txt: fasta/KLF4.fasta
+	bin/01_digest_protein.py fasta/KLF4.fasta data/KLF4.peptides.txt
+
+data/KLF4.count.tsv: fasta/KLF4.fasta data/KLF4.peptides.txt
+	bin/02_count_amino_acids.py fasta/KLF4.fasta data/KLF4.peptides.txt data/KLF4.count.tsv
+
+data/KLF4.plot.png: data/KLF4.count.tsv
+	bin/03a_plot_count.py data/KLF4.count.tsv data/KLF4.plot.png
+
+data/protein_report.tsv: data/KLF4.count.tsv
+	bin/03b_get_report.py data/KLF4.count.tsv --output_file=data/protein_report.tsv
+
+data/results.tgz: data/KLF4.plot.png data/protein_report.tsv
+	rm -rf results
+	mkdir results
+	cp data/KLF4.plot.png data/protein_report.tsv results/
+	tar -czf data/results.tgz results
+	rm -r results
